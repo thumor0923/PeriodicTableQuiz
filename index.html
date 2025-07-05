@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>化學元素週期表測驗</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+        }
+
+        .quiz-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            height: 750px;
+            text-align: center;
+            position: relative;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .quiz-header {
+            margin-bottom: 30px;
+        }
+
+        .quiz-title {
+            font-size: 2.5em;
+            color: #4a5568;
+            margin-bottom: 10px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .quiz-subtitle {
+            font-size: 1.1em;
+            color: #718096;
+            margin-bottom: 20px;
+        }
+
+        .quiz-info {
+            display: flex;
+            justify-content: space-between;
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .info-label {
+            font-size: 0.9em;
+            color: #718096;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #4a5568;
+        }
+
+        .time-display {
+            color: #667eea;
+            font-family: 'Courier New', monospace;
+        }
+
+        .completion-time {
+            color: #38a169;
+            font-size: 0.9em;
+            font-weight: normal;
+        }
+
+        /* 隱藏滾動條 */
+        .quiz-container::-webkit-scrollbar,
+        .results-summary::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* 保持滾動功能但隱藏滾動條 */
+        .quiz-container,
+        .results-summary {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .question-section {
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .question-text {
+            font-size: 1.8em;
+            color: #2d3748;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #edf2f7;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        /* 題目切換動畫 */
+        .question-transition {
+            animation: slideInFromRight 0.5s ease-out;
+        }
+
+        @keyframes slideInFromRight {
+            0% {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .question-exit {
+            animation: slideOutToLeft 0.3s ease-in;
+        }
+
+        @keyframes slideOutToLeft {
+            0% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+        }
+
+        /* 答案輸入框動畫 */
+        .input-section {
+            transition: all 0.3s ease;
+        }
+
+        .input-appear {
+            animation: fadeInUp 0.4s ease-out 0.2s both;
+        }
+
+        @keyframes fadeInUp {
+            0% {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* 反饋動畫 */
+        .feedback-enter {
+            animation: bounceIn 0.5s ease-out;
+        }
+
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 1;
+            }
+            70% {
+                transform: scale(0.9);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* 按鈕動畫 */
+        .button-slide {
+            animation: slideInFromBottom 0.3s ease-out 0.4s both;
+        }
+
+        @keyframes slideInFromBottom {
+            0% {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .answer-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.5em;
+            border: 3px solid #e2e8f0;
+            border-radius: 10px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .answer-input:focus {
+            border-color: #667eea;
+        }
+
+        .answer-input.correct {
+            border-color: #48bb78;
+            background-color: #f0fff4;
+        }
+
+        .answer-input.incorrect {
+            border-color: #f56565;
+            background-color: #fffafa;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .feedback.correct {
+            background-color: #c6f6d5;
+            color: #22543d;
+        }
+
+        .feedback.incorrect {
+            background-color: #fed7d7;
+            color: #742a2a;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            font-weight: 500;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .button:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.8s ease;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: progressShine 2s infinite;
+        }
+
+        @keyframes progressShine {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .results-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* 垂直居中 */
+    align-items: center; /* 水平居中 */
+    min-height: 100%; /* 填充 quiz-container 高度 */
+    padding: 20px;
+    text-align: center;
+}
+
+        .final-score {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .score-excellent {
+            color: #38a169;
+        }
+
+        .score-good {
+            color: #3182ce;
+        }
+
+        .score-average {
+            color: #d69e2e;
+        }
+
+        .score-poor {
+            color: #e53e3e;
+        }
+        .results-summary {
+    background: #f7fafc;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    width: 100%; /* 確保寬度一致 */
+    /* 移除 max-height 和 overflow-y，允許內容決定高度 */
+}
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+        }
+
+        .welcome-screen {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .quiz-playing {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            flex: 1;
+        }
+
+        .welcome-title {
+            font-size: 2.5em;
+            color: #4a5568;
+            margin-bottom: 20px;
+        }
+
+        .welcome-description {
+            font-size: 1.2em;
+            color: #718096;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .instructions {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .instructions h3 {
+            color: #4a5568;
+            margin-bottom: 15px;
+        }
+
+        .instructions ul {
+            color: #718096;
+            line-height: 1.8;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        /* ✨ 新增的 CSS 規則 ✨ */
+        .results-footer {
+            margin-top: auto; /* 關鍵！將此元素推向底部 */
+            padding-top: 20px; /* 在按鈕和上方內容間保留一些空間 */
+        }
+
+
+        @media (max-width: 768px) {
+            .quiz-container {
+                padding: 20px;
+                margin: 20px;
+                height: 600px;
+            }
+
+            .quiz-title {
+                font-size: 1.8em;
+                white-space: nowrap;
+            }
+
+            .question-text {
+                font-size: 1.5em;
+            }
+
+            .answer-input {
+                font-size: 1.3em;
+            }
+
+            .quiz-info {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .info-item {
+                flex: 1;
+                min-width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <periodic-table-quiz></periodic-table-quiz>
+    </div>
+
+    <script>
+        const { createApp, ref, reactive, computed } = Vue;
+
+        const PeriodicTableQuiz = {
+            setup() {
+                // 元素資料
+                const elements = [
+                    { atomicNumber: 1, symbol: 'H', chinese: '氫', english: 'Hydrogen' },
+                    { atomicNumber: 2, symbol: 'He', chinese: '氦', english: 'Helium' },
+                    { atomicNumber: 3, symbol: 'Li', chinese: '鋰', english: 'Lithium' },
+                    { atomicNumber: 4, symbol: 'Be', chinese: '鈹', english: 'Beryllium' },
+                    { atomicNumber: 5, symbol: 'B', chinese: '硼', english: 'Boron' },
+                    { atomicNumber: 6, symbol: 'C', chinese: '碳', english: 'Carbon' },
+                    { atomicNumber: 7, symbol: 'N', chinese: '氮', english: 'Nitrogen' },
+                    { atomicNumber: 8, symbol: 'O', chinese: '氧', english: 'Oxygen' },
+                    { atomicNumber: 9, symbol: 'F', chinese: '氟', english: 'Fluorine' },
+                    { atomicNumber: 10, symbol: 'Ne', chinese: '氖', english: 'Neon' },
+                    { atomicNumber: 11, symbol: 'Na', chinese: '鈉', english: 'Sodium' },
+                    { atomicNumber: 12, symbol: 'Mg', chinese: '鎂', english: 'Magnesium' },
+                    { atomicNumber: 13, symbol: 'Al', chinese: '鋁', english: 'Aluminum' },
+                    { atomicNumber: 14, symbol: 'Si', chinese: '矽', english: 'Silicon' },
+                    { atomicNumber: 15, symbol: 'P', chinese: '磷', english: 'Phosphorus' },
+                    { atomicNumber: 16, symbol: 'S', chinese: '硫', english: 'Sulfur' },
+                    { atomicNumber: 17, symbol: 'Cl', chinese: '氯', english: 'Chlorine' },
+                    { atomicNumber: 18, symbol: 'Ar', chinese: '氬', english: 'Argon' },
+                    { atomicNumber: 19, symbol: 'K', chinese: '鉀', english: 'Potassium' },
+                    { atomicNumber: 20, symbol: 'Ca', chinese: '鈣', english: 'Calcium' },
+                    { atomicNumber: 26, symbol: 'Fe', chinese: '鐵', english: 'Iron' },
+                    { atomicNumber: 29, symbol: 'Cu', chinese: '銅', english: 'Copper' },
+                    { atomicNumber: 30, symbol: 'Zn', chinese: '鋅', english: 'Zinc' },
+                    { atomicNumber: 47, symbol: 'Ag', chinese: '銀', english: 'Silver' },
+                    { atomicNumber: 50, symbol: 'Sn', chinese: '錫', english: 'Tin' },
+                    { atomicNumber: 53, symbol: 'I', chinese: '碘', english: 'Iodine' },
+                    { atomicNumber: 54, symbol: 'Xe', chinese: '氙', english: 'Xenon' },
+                    { atomicNumber: 55, symbol: 'Cs', chinese: '銫', english: 'Cesium' },
+                    { atomicNumber: 56, symbol: 'Ba', chinese: '鋇', english: 'Barium' },
+                    { atomicNumber: 78, symbol: 'Pt', chinese: '鉑', english: 'Platinum' },
+                    { atomicNumber: 79, symbol: 'Au', chinese: '金', english: 'Gold' },
+                    { atomicNumber: 80, symbol: 'Hg', chinese: '汞', english: 'Mercury' },
+                    { atomicNumber: 82, symbol: 'Pb', chinese: '鉛', english: 'Lead' },
+                    { atomicNumber: 85, symbol: 'At', chinese: '砈', english: 'Astatine' },
+                    { atomicNumber: 86, symbol: 'Rn', chinese: '氡', english: 'Radon' }
+                ];
+
+                // 測驗狀態
+                const gameState = ref('welcome'); // 'welcome', 'playing', 'finished'
+                const currentQuestionIndex = ref(0);
+                const score = ref(0);
+                const userAnswer = ref('');
+                const questions = ref([]);
+                const answers = ref([]);
+                const showFeedback = ref(false);
+                const isCorrect = ref(false);
+                const feedbackMessage = ref('');
+                
+                // 動畫狀態
+                const questionAnimationClass = ref('');
+                const inputAnimationClass = ref('');
+                const feedbackAnimationClass = ref('');
+                const buttonAnimationClass = ref('');
+                
+                // 時間相關
+                const startTime = ref(0);
+                const endTime = ref(0);
+                const currentTime = ref(0);
+                const timerInterval = ref(null);
+                const completionTime = ref('');
+
+                // 計算屬性
+                const progress = computed(() => {
+                    return (currentQuestionIndex.value / 20) * 100; // 正式版本：20題
+                    // return (currentQuestionIndex.value / 1) * 100; // 測試版本：1題（已註解）
+                });
+
+                const currentQuestion = computed(() => {
+                    return questions.value[currentQuestionIndex.value];
+                });
+
+                const finalScoreClass = computed(() => {
+                    const scorePercentage = score.value;
+                    if (scorePercentage >= 90) return 'score-excellent';
+                    if (scorePercentage >= 70) return 'score-good';
+                    if (scorePercentage >= 50) return 'score-average';
+                    return 'score-poor';
+                });
+
+                const scoreMessage = computed(() => {
+                    const scorePercentage = score.value;
+                    if (scorePercentage >= 90) return '太棒了！你是元素週期表專家！';
+                    if (scorePercentage >= 70) return '很棒！你對元素有很好的了解！';
+                    if (scorePercentage >= 50) return '不錯！繼續努力學習！';
+                    return '加油！多練習會更好！';
+                });
+
+                // 時間相關計算屬性
+                const elapsedTime = computed(() => {
+                    if (gameState.value === 'playing') {
+                        return Math.floor((currentTime.value - startTime.value) / 1000);
+                    } else if (gameState.value === 'finished') {
+                        return Math.floor((endTime.value - startTime.value) / 1000);
+                    }
+                    return 0;
+                });
+
+                const formattedElapsedTime = computed(() => {
+                    const minutes = Math.floor(elapsedTime.value / 60);
+                    const seconds = elapsedTime.value % 60;
+                    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                });
+
+                const averageTimePerQuestion = computed(() => {
+                    if (gameState.value === 'finished' && answers.value.length > 0) {
+                        const totalSeconds = Math.floor((endTime.value - startTime.value) / 1000);
+                        const avgSeconds = Math.floor(totalSeconds / answers.value.length);
+                        return `${avgSeconds}秒`;
+                    }
+                    return '0秒';
+                });
+
+                // 格式化完成時間
+                const formattedCompletionTime = computed(() => {
+                    if (completionTime.value) {
+                        return completionTime.value;
+                    }
+                    return '';
+                });
+
+                // 生成隨機問題
+                const generateQuestions = () => {
+                    const shuffledElements = [...elements].sort(() => Math.random() - 0.5);
+                    
+                    // ========== 正式版本：20題 ==========
+                    const selectedElements = shuffledElements.slice(0, 20);
+                    
+                    // 確保兩種題目類型都會出現：前10題隨機，後10題用相反的類型
+                    const questionTypes = [];
+                    for (let i = 0; i < 10; i++) {
+                        questionTypes.push(Math.random() < 0.5 ? 'chinese-to-symbol' : 'symbol-to-chinese');
+                    }
+                    for (let i = 0; i < 10; i++) {
+                        questionTypes.push(questionTypes[i] === 'chinese-to-symbol' ? 'symbol-to-chinese' : 'chinese-to-symbol');
+                    }
+                    
+                    // 打亂題目類型順序
+                    const shuffledTypes = [...questionTypes].sort(() => Math.random() - 0.5);
+                    
+                    questions.value = selectedElements.map((element, index) => {
+                        const questionType = shuffledTypes[index];
+                        
+                        if (questionType === 'chinese-to-symbol') {
+                            return {
+                                element: element,
+                                questionText: element.chinese,
+                                correctAnswer: element.symbol,
+                                questionType: 'chinese-to-symbol',
+                                placeholder: '請輸入元素符號...'
+                            };
+                        } else {
+                            return {
+                                element: element,
+                                questionText: element.symbol,
+                                correctAnswer: element.chinese,
+                                questionType: 'symbol-to-chinese',
+                                placeholder: '請輸入中文名稱...'
+                            };
+                        }
+                    });
+                    
+                    // ========== 測試版本：只有1題（已註解） ==========
+                    /*
+                    const selectedElement = shuffledElements[0]; // 只選第一個元素
+                    const questionType = Math.random() < 0.5 ? 'chinese-to-symbol' : 'symbol-to-chinese';
+                    
+                    if (questionType === 'chinese-to-symbol') {
+                        questions.value = [{
+                            element: selectedElement,
+                            questionText: selectedElement.chinese,
+                            correctAnswer: selectedElement.symbol,
+                            questionType: 'chinese-to-symbol',
+                            placeholder: '請輸入元素符號...'
+                        }];
+                    } else {
+                        questions.value = [{
+                            element: selectedElement,
+                            questionText: selectedElement.symbol,
+                            correctAnswer: selectedElement.chinese,
+                            questionType: 'symbol-to-chinese',
+                            placeholder: '請輸入中文名稱...'
+                        }];
+                    }
+                    */
+                };
+
+                // 開始測驗
+                const startQuiz = () => {
+                    gameState.value = 'playing';
+                    currentQuestionIndex.value = 0;
+                    score.value = 0;
+                    userAnswer.value = '';
+                    answers.value = [];
+                    showFeedback.value = false;
+                    generateQuestions();
+                    
+                    // 開始計時
+                    startTime.value = Date.now();
+                    currentTime.value = startTime.value;
+                    timerInterval.value = setInterval(() => {
+                        currentTime.value = Date.now();
+                    }, 1000);
+                    
+                    // 觸發初始動畫
+                    setTimeout(() => {
+                        questionAnimationClass.value = 'question-transition';
+                        inputAnimationClass.value = 'input-appear';
+                        buttonAnimationClass.value = 'button-slide';
+                        
+                        setTimeout(() => {
+                            questionAnimationClass.value = '';
+                            inputAnimationClass.value = '';
+                            buttonAnimationClass.value = '';
+                        }, 600);
+                    }, 100);
+                };
+
+                // 檢查答案
+                const checkAnswer = () => {
+                    if (!userAnswer.value.trim()) return;
+
+                    const correct = userAnswer.value.trim() === currentQuestion.value.correctAnswer;
+                    isCorrect.value = correct;
+                    
+                    if (correct) {
+                        score.value += 5;
+                        if (currentQuestion.value.questionType === 'chinese-to-symbol') {
+                            feedbackMessage.value = `正確！${currentQuestion.value.element.symbol} 就是 ${currentQuestion.value.questionText} 的元素符號！`;
+                        } else {
+                            feedbackMessage.value = `正確！${currentQuestion.value.element.chinese} 就是 ${currentQuestion.value.questionText} 的中文名稱！`;
+                        }
+                    } else {
+                        if (currentQuestion.value.questionType === 'chinese-to-symbol') {
+                            feedbackMessage.value = `答錯了！${currentQuestion.value.questionText} 的正確元素符號是 ${currentQuestion.value.correctAnswer}。`;
+                        } else {
+                            feedbackMessage.value = `答錯了！${currentQuestion.value.questionText} 的正確中文名稱是 ${currentQuestion.value.correctAnswer}。`;
+                        }
+                    }
+
+                    // 記錄答案
+                    answers.value.push({
+                        question: currentQuestion.value,
+                        userAnswer: userAnswer.value.trim(),
+                        correct: correct
+                    });
+
+                    showFeedback.value = true;
+                    
+                    // 觸發反饋動畫
+                    feedbackAnimationClass.value = 'feedback-enter';
+                    setTimeout(() => {
+                        feedbackAnimationClass.value = '';
+                    }, 500);
+                };
+
+                // 下一題（帶動畫效果）
+                const nextQuestion = () => {
+                    if (currentQuestionIndex.value < 19) { // 正式版本：20題
+                    // if (currentQuestionIndex.value < 0) { // 測試版本：1題（currentQuestionIndex最大值為0）
+                        // 觸發退出動畫
+                        questionAnimationClass.value = 'question-exit';
+                        
+                        setTimeout(() => {
+                            // 切換題目
+                            currentQuestionIndex.value++;
+                            userAnswer.value = '';
+                            showFeedback.value = false;
+                            
+                            // 觸發進入動畫
+                            questionAnimationClass.value = 'question-transition';
+                            inputAnimationClass.value = 'input-appear';
+                            buttonAnimationClass.value = 'button-slide';
+                            
+                            // 清除動畫類
+                            setTimeout(() => {
+                                questionAnimationClass.value = '';
+                                inputAnimationClass.value = '';
+                                buttonAnimationClass.value = '';
+                            }, 600);
+                        }, 300);
+                    } else {
+                        // 結束測驗
+                        endTime.value = Date.now();
+                        if (timerInterval.value) {
+                            clearInterval(timerInterval.value);
+                            timerInterval.value = null;
+                        }
+                        
+                        // 記錄完成時間
+                        const now = new Date();
+                        const year = now.getFullYear();
+                        const month = String(now.getMonth() + 1).padStart(2, '0');
+                        const day = String(now.getDate()).padStart(2, '0');
+                        const hours = String(now.getHours()).padStart(2, '0');
+                        const minutes = String(now.getMinutes()).padStart(2, '0');
+                        const seconds = String(now.getSeconds()).padStart(2, '0');
+                        completionTime.value = `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+                        
+                        gameState.value = 'finished';
+                    }
+                };
+
+                // 重新開始
+                const restartQuiz = () => {
+                    gameState.value = 'welcome';
+                    currentQuestionIndex.value = 0;
+                    score.value = 0;
+                    userAnswer.value = '';
+                    answers.value = [];
+                    showFeedback.value = false;
+                    
+                    // 重置計時器
+                    if (timerInterval.value) {
+                        clearInterval(timerInterval.value);
+                        timerInterval.value = null;
+                    }
+                    startTime.value = 0;
+                    endTime.value = 0;
+                    currentTime.value = 0;
+                    completionTime.value = '';
+                };
+
+                // 處理輸入
+                const handleInput = (event) => {
+                    if (event.key === 'Enter' && !showFeedback.value) {
+                        checkAnswer();
+                    }
+                };
+
+                return {
+                    gameState,
+                    currentQuestionIndex,
+                    score,
+                    userAnswer,
+                    questions,
+                    answers,
+                    showFeedback,
+                    isCorrect,
+                    feedbackMessage,
+                    progress,
+                    currentQuestion,
+                    finalScoreClass,
+                    scoreMessage,
+                    questionAnimationClass,
+                    inputAnimationClass,
+                    feedbackAnimationClass,
+                    buttonAnimationClass,
+                    elapsedTime,
+                    formattedElapsedTime,
+                    averageTimePerQuestion,
+                    formattedCompletionTime,
+                    startQuiz,
+                    checkAnswer,
+                    nextQuestion,
+                    restartQuiz,
+                    handleInput
+                };
+            },
+            template: `
+                <div class="quiz-container">
+                    <div v-if="gameState === 'welcome'" class="welcome-screen">
+                        <h1 class="welcome-title">🧪 化學元素週期表測驗</h1>
+                        <p class="welcome-description">
+                            歡迎來到化學元素週期表測驗！測試你對元素符號和中文名稱的雙向記憶能力。<br>
+                            測驗將自動計時，挑戰你的速度和準確性！
+                        </p>
+                        
+                        <div class="instructions">
+                            <h3>📋 測驗規則：</h3>
+                            <ul>
+                                <li>• 共有 20 道題目</li>
+                                <li>• 題目類型一：顯示<strong>中文名稱</strong>，請輸入<strong>元素符號</strong>（例如：氫→H）</li>
+                                <li>• 題目類型二：顯示<strong>元素符號</strong>，請輸入<strong>中文名稱</strong>（例如：Fe→鐵）</li>
+                                <li>• 每答對一題得 5 分，滿分 100 分</li>
+                                <li>• <span style="color: #667eea; font-weight: bold;">⏰ 自動計時，挑戰你的速度！</span></li>
+                                <li>• <span style="color: #e53e3e; font-weight: bold;">⚠️ 輸入區分大小寫！</span></li>
+                                <!-- 測試版本：<li>• 答對得 5 分，滿分 5 分</li> -->
+                            </ul>
+                        </div>
+                        
+                        <button class="button" @click="startQuiz">🚀 開始測驗</button>
+                    </div>
+
+                    <div v-if="gameState === 'playing'" class="quiz-playing">
+                        <div class="quiz-header">
+                            <h1 class="quiz-title">🧪 元素週期表測驗</h1>
+                            <div class="progress-bar">
+                                <div class="progress-fill" :style="{ width: progress + '%' }"></div>
+                            </div>
+                        </div>
+
+                        <div class="quiz-info">
+                            <div class="info-item">
+                                <div class="info-label">題目</div>
+                                <div class="info-value">{{ currentQuestionIndex + 1 }} / 20</div>
+                                <!-- 測試版本：{{ currentQuestionIndex + 1 }} / 1 -->
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">分數</div>
+                                <div class="info-value">{{ score }} 分</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">時間</div>
+                                <div class="info-value time-display">{{ formattedElapsedTime }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">剩餘</div>
+                                <div class="info-value">{{ 20 - currentQuestionIndex }} 題</div>
+                                <!-- 測試版本：{{ 1 - currentQuestionIndex }} 題 -->
+                            </div>
+                        </div>
+
+                        <div class="question-section">
+                            <div :class="['question-text', questionAnimationClass]">
+                                <span v-if="currentQuestion.questionType === 'chinese-to-symbol'">
+                                    {{ currentQuestion.questionText }} 的元素符號是？
+                                </span>
+                                <span v-else>
+                                    {{ currentQuestion.questionText }} 的中文名稱是？
+                                </span>
+                            </div>
+                            
+                            <div :class="['input-section', inputAnimationClass]">
+                                <input
+                                    v-model="userAnswer"
+                                    @keydown="handleInput"
+                                    :disabled="showFeedback"
+                                    :class="{ 
+                                        'answer-input': true,
+                                        'correct': showFeedback && isCorrect,
+                                        'incorrect': showFeedback && !isCorrect 
+                                    }"
+                                    type="text"
+                                    :placeholder="currentQuestion.placeholder"
+                                    :maxlength="currentQuestion.questionType === 'chinese-to-symbol' ? 2 : 5"
+                                />
+                                
+                                <div v-if="!showFeedback" style="color: #e53e3e; font-size: 0.9em; margin-top: 8px; font-weight: bold;">
+                                    <span v-if="currentQuestion.questionType === 'chinese-to-symbol'">
+                                        ⚠️ 注意：區分大小寫！（如：H、Fe、Au）
+                                    </span>
+                                    <span v-else>
+                                        ⚠️ 注意：請輸入正確的中文名稱！
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div v-if="showFeedback" :class="['feedback', feedbackAnimationClass, { 'correct': isCorrect, 'incorrect': !isCorrect }]">
+                                {{ feedbackMessage }}
+                            </div>
+                        </div>
+
+                        <div :class="buttonAnimationClass">
+                            <button 
+                                v-if="!showFeedback" 
+                                class="button" 
+                                :disabled="!userAnswer.trim()"
+                                @click="checkAnswer"
+                            >
+                                ✓ 確認答案
+                            </button>
+                            
+                            <button 
+                                v-if="showFeedback" 
+                                class="button" 
+                                @click="nextQuestion"
+                            >
+                                {{ currentQuestionIndex < 19 ? '下一題 →' : '查看結果' }}
+                                <!-- 測試版本：{{ currentQuestionIndex < 0 ? '下一題 →' : '查看結果' }} -->
+                            </button>
+                        </div>
+                    </div>
+
+                    <div v-if="gameState === 'finished'" class="results-section">
+                        <h1 class="quiz-title">🎉 測驗完成！</h1>
+                        
+                        <div :class="['final-score', finalScoreClass]">
+                            {{ score }} 分
+                        </div>
+                        
+                        <p class="quiz-subtitle">{{ scoreMessage }}</p>
+                        
+                        <div class="results-summary">
+                            <h3>📊 測驗統計</h3>
+                            <div class="summary-item">
+                                <span>答對題數：</span>
+                                <span><strong>{{ answers.filter(a => a.correct).length }} / 20</strong></span>
+                                <!-- 測試版本：{{ answers.filter(a => a.correct).length }} / 1 -->
+                            </div>
+                            <div class="summary-item">
+                                <span>正確率：</span>
+                                <span><strong>{{ Math.round((answers.filter(a => a.correct).length / 20) * 100) }}%</strong></span>
+                                <!-- 測試版本：{{ Math.round((answers.filter(a => a.correct).length / 1) * 100) }}% -->
+                            </div>
+                            <div class="summary-item">
+                                <span>總分：</span>
+                                <span><strong>{{ score }} / 100</strong></span>
+                                <!-- 測試版本：{{ score }} / 5 -->
+                            </div>
+                            <div class="summary-item">
+                                <span>總時間：</span>
+                                <span><strong class="time-display">{{ formattedElapsedTime }}</strong></span>
+                            </div>
+                            <div class="summary-item">
+                                <span>平均每題：</span>
+                                <span><strong class="time-display">{{ averageTimePerQuestion }}</strong></span>
+                            </div>
+                            <div class="summary-item">
+                                <span>結算時間：</span>
+                                <span><strong class="completion-time">{{ formattedCompletionTime }}</strong></span>
+                            </div>
+                        </div>
+                        
+                        <div class="results-footer">
+                            <button class="button" @click="restartQuiz">🔄 重新開始</button>
+                        </div>
+                    </div>
+                </div>
+            `
+        };
+
+        createApp({
+            components: {
+                PeriodicTableQuiz
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
