@@ -630,6 +630,9 @@
                 const feedbackAnimationClass = ref('');
                 const buttonAnimationClass = ref('');
                 
+                // 防重複點擊狀態
+                const isNextQuestionProcessing = ref(false);
+                
                 // 時間相關
                 const startTime = ref(0);
                 const endTime = ref(0);
@@ -833,6 +836,10 @@
 
                 // 下一題（帶動畫效果）
                 const nextQuestion = () => {
+                    // 防重複點擊
+                    if (isNextQuestionProcessing.value) return;
+                    isNextQuestionProcessing.value = true;
+                    
                     if (currentQuestionIndex.value < 19) { // 正式版本：20題
                     // if (currentQuestionIndex.value < 0) { // 測試版本：1題（currentQuestionIndex最大值為0）
                         // 觸發退出動畫
@@ -854,6 +861,8 @@
                                 questionAnimationClass.value = '';
                                 inputAnimationClass.value = '';
                                 buttonAnimationClass.value = '';
+                                // 動畫完成後重置防重複點擊狀態
+                                isNextQuestionProcessing.value = false;
                             }, 600);
                         }, 300);
                     } else {
@@ -875,6 +884,8 @@
                         completionTime.value = `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
                         
                         gameState.value = 'finished';
+                        // 重置防重複點擊狀態
+                        isNextQuestionProcessing.value = false;
                     }
                 };
 
@@ -980,11 +991,6 @@
                             <div class="info-item">
                                 <div class="info-label">時間</div>
                                 <div class="info-value time-display">{{ formattedElapsedTime }}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">剩餘</div>
-                                <div class="info-value">{{ 20 - currentQuestionIndex }} 題</div>
-                                <!-- 測試版本：{{ 1 - currentQuestionIndex }} 題 -->
                             </div>
                         </div>
 
