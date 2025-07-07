@@ -426,32 +426,140 @@
 
         @media (max-width: 768px) {
             .quiz-container {
-                padding: 20px;
-                margin: 20px;
-                height: 600px;
+                padding: 15px;
+                margin: 10px;
+                min-height: 90vh; /* 改為最小高度，而非固定高度 */
+                max-height: 95vh; /* 設定最大高度避免超出視窗 */
+                height: auto; /* 讓高度自動調整 */
             }
 
             .quiz-title {
-                font-size: 1.8em;
+                font-size: 1.6em; /* 稍微減小 */
                 white-space: nowrap;
+                margin-bottom: 15px; /* 減少下邊距 */
+            }
+            
+            .quiz-subtitle {
+                font-size: 1em; /* 減小字體 */
+                margin-bottom: 15px; /* 減少下邊距 */
             }
 
-            .question-text {
-                font-size: 1.5em;
-            }
-
-            .answer-input {
-                font-size: 1.3em;
+            .quiz-header {
+                margin-bottom: 20px; /* 減少下邊距 */
             }
 
             .quiz-info {
-                flex-direction: column;
-                gap: 15px;
+                flex-direction: row; /* 改回橫向排列，節省垂直空間 */
+                gap: 8px; /* 減少間距 */
+                padding: 10px; /* 減少內邊距 */
+                margin-bottom: 20px; /* 減少下邊距 */
             }
             
             .info-item {
                 flex: 1;
-                min-width: 120px;
+                min-width: 70px; /* 減少最小寬度 */
+            }
+            
+            .info-label {
+                font-size: 0.8em; /* 減小字體 */
+                margin-bottom: 3px; /* 減少間距 */
+            }
+            
+            .info-value {
+                font-size: 1.1em; /* 減小字體 */
+            }
+
+            .question-section {
+                margin-bottom: 20px; /* 減少下邊距 */
+            }
+
+            .question-text {
+                font-size: 1.3em; /* 減小字體 */
+                padding: 15px; /* 減少內邊距 */
+                margin-bottom: 15px; /* 減少下邊距 */
+            }
+
+            .answer-input {
+                font-size: 1.2em; /* 減小字體 */
+                padding: 12px; /* 減少內邊距 */
+            }
+            
+            .input-section {
+                margin-bottom: 15px; /* 減少下邊距 */
+            }
+            
+            .feedback {
+                margin-top: 10px; /* 減少上邊距 */
+                padding: 8px; /* 減少內邊距 */
+                font-size: 0.9em; /* 減小字體 */
+            }
+            
+            .button {
+                padding: 12px 25px; /* 減少內邊距 */
+                font-size: 1em; /* 減小字體 */
+                margin: 5px; /* 減少外邊距 */
+            }
+            
+            .welcome-description {
+                font-size: 1em; /* 減小字體 */
+                margin-bottom: 20px; /* 減少下邊距 */
+                line-height: 1.4; /* 減少行高 */
+            }
+            
+            .instructions {
+                padding: 15px; /* 減少內邊距 */
+                margin-bottom: 20px; /* 減少下邊距 */
+            }
+            
+            .instructions h3 {
+                margin-bottom: 10px; /* 減少下邊距 */
+                font-size: 1.1em; /* 減小字體 */
+            }
+            
+            .instructions ul {
+                line-height: 1.5; /* 減少行高 */
+                font-size: 0.9em; /* 減小字體 */
+            }
+            
+            .instructions li {
+                margin-bottom: 5px; /* 減少間距 */
+            }
+            
+            .final-score {
+                font-size: 2.2em; /* 減小字體 */
+                margin-bottom: 15px; /* 減少下邊距 */
+            }
+            
+            .results-summary {
+                padding: 15px; /* 減少內邊距 */
+                margin-bottom: 15px; /* 減少下邊距 */
+            }
+            
+            .results-summary h3 {
+                font-size: 1.1em; /* 減小字體 */
+                margin-bottom: 10px; /* 減少下邊距 */
+            }
+            
+            .summary-item {
+                margin-bottom: 8px; /* 減少間距 */
+                padding: 8px; /* 減少內邊距 */
+                font-size: 0.9em; /* 減小字體 */
+            }
+            
+            .results-footer {
+                padding-top: 15px; /* 減少上邊距 */
+            }
+            
+            /* 為手機版優化進度條 */
+            .progress-bar {
+                margin-bottom: 15px; /* 減少下邊距 */
+                height: 6px; /* 稍微減小高度 */
+            }
+            
+            /* 優化警告文字 */
+            .input-section > div {
+                font-size: 0.8em !important; /* 減小警告文字 */
+                margin-top: 5px !important; /* 減少上邊距 */
             }
         }
     </style>
